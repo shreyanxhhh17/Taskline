@@ -1,0 +1,144 @@
+Workspace relation { 
+    name (String ) , 
+    description (String) , 
+    color (String ) , 
+    owner (Foreign key reference user)
+
+    MEMBER (WEAK ENTITY ){
+        user {Foreign Key} ,
+        role (String) ,
+        joined : Date
+    }
+    project_id : FOREIGN KEY references Project table
+}
+
+WorkSpaceInvite relation {
+    User : String FOREIGN KEY user 
+    Project_id : String FOREIGN KEY project 
+    token : String 
+    role  : enum("member" , "admin" , "viewer) ,
+    expiredAt : Date
+}
+
+Verification Entity (WEAK ENTITY exist if the user exist){
+    name : String ,
+    token  : String ,
+    expiresAt : Date 
+}
+
+User Entity (relation) ){
+    name : String ,
+    email : String ,
+    password : String ,
+    profilePicture: { type: String },
+    isEmailVerified: { type: Boolean, default: false },
+    lastLogin: { type: Date },
+    is2FAEnabled: { type: Boolean, default: false },
+    twoFAOtp: { type: String, select: false },
+    twoFAOtpExpires: { type: Date, select: false },
+}
+
+
+TASK ( RELATION - WEAK ENTITY EXIST if project created ){
+    title: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
+    project: FOREIGN KEY project table,
+    status: enum,
+    priority: enum,
+    assignees: foreing key reference user,
+    watchers: foreign key reference user,
+    dueDate: { type: Date },
+    completedAt: { type: Date },
+    estimatedHours: { type: Number, min: 0 },
+    actualHours: { type: Number, min: 0 },
+    tags: [{ type: String }],
+
+    subtasks (weak entity exist if task exists): 
+      {
+        title: String
+        completed:Boolean,
+        createdAt: Daate,
+      },
+    comments: FOREIGN KEY TO references to COMMENT TABLE,
+    attachments (ENTITY): [
+      {
+        ATTRIBUTES : 
+        fileName: { type: String, required: true },
+        fileUrl: { type: String, required: true },
+        fileType: { type: String },
+        fileSize: { type: Number },
+        uploadedBy: { type: Schema.Types.ObjectId, ref: "User" },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    isArchived: { type: Boolean, default: false },
+  },
+
+project (relation) {
+    {
+    title: String,
+    description: { type: String, trim: true },
+    workspace: {
+      foreign key reference to workspace table
+    },
+    status: enum,
+    startDate: { type: Date },
+    dueDate: { type: Date },
+    progress: { type: Number },
+    tasks: [{ FOREIGN KEY , ref: "Task" }],
+    members (WEAK ENTITY exist if project created): [
+      {
+        user: Foreign key reference to user table 
+        role: String ,
+    tags: [{ type: String }],
+    createdBy: { foreign key references to user , required: true },
+    isArchived: { type: Boolean, default: false },
+  },
+}
+
+ACTIVITY (relation) {
+user: { foreign key reference to user
+    },
+    action: { enum ,
+    },
+    resourceType: {
+      type: String,
+      
+    },
+    resourceId: {
+      Rreferences to user relation 
+    },
+    details: {
+      type: Object,
+    },
+}
+
+
+COMMENT REALTION (WEAK CANNOT EXIST IF TASK relation exist ) (
+  {
+    text: String 
+    },
+    task: reference to task relation 
+    author:  reference to user relation 
+    mentions (entity ): [
+      {
+        user: foreign key to user,
+        offset: number ,
+        length: number ,
+      },
+    ],
+    reactions: {
+       reaction : String (emoji) ,
+       user : reference to user table,
+    attachments (entity ): [
+      {
+        fileName: { type: String },
+        fileUrl: { type: String },
+        fileType: { type: String },
+        fileSize: { type: Number },
+      },
+    ],
+    isEdited: { type: Boolean},
+    }
+  },
